@@ -1,0 +1,2 @@
+# CanvasAdapter
+CocosCreator自动适配方案：监听Canvas尺寸变化并自动适配节点尺寸或者位置
