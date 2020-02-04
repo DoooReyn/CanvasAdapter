@@ -88,32 +88,42 @@ export default class CanvasAdapter extends cc.Component {
       return;
     }
 
-    //使用Widget先对齐到设计尺寸
+    //强制修改对齐模式为ONCE，告别使用父节点对齐
     let widget = this.node.getComponent(cc.Widget);
     if (!widget) {
       return cc.warn(`节点${this.node.name}适配位置，但未添加Widget组件！`);
     }
     widget.alignMode = cc.Widget.AlignMode.ONCE;
-    widget.updateAlignment();
 
-    //在下一帧使用偏移对齐到Canvas尺寸
+    //在下一帧对齐到Canvas尺寸
     this.scheduleOnce(() => {
+      let { width, height, scaleX, scaleY, anchorX, anchorY } = this.node;
       let real_size = getVisibleRealSize();
-      let x = real_size.width - cc.winSize.width;
-      let y = real_size.height - cc.winSize.height;
-      let offset = cc.v2(x, y).mul(0.5);
-      if (widget.isAlignLeft) {
-        this.node.x -= offset.x;
+      if (
+        widget.isAlignBottom &&
+        widget.isAlignLeft &&
+        widget.isAlignTop &&
+        widget.isAlignRight
+      ) {
+        let nw = real_size.width - widget.left - widget.right;
+        let nh = real_size.height - widget.top - widget.bottom;
+        this.node.setContentSize(nw, nh);
+      } else if (widget.isAlignBottom && widget.isAlignTop) {
+        let nh = real_size.height - widget.top - widget.bottom;
+        this.node.height = nh;
+      } else if (widget.isAlignLeft && widget.isAlignRight) {
+        let nw = real_size.width - widget.left - widget.right;
+        this.node.width = nw;
+      } else {
       }
-      if (widget.isAlignRight) {
-        this.node.x += offset.x;
-      }
-      if (widget.isAlignBottom) {
-        this.node.y -= offset.y;
-      }
-      if (widget.isAlignTop) {
-        this.node.y += offset.y;
-      }
+      let rw = real_size.width * anchorX;
+      let nw = width * scaleX * anchorX;
+      let rh = real_size.height * anchorY;
+      let nh = height * scaleY * anchorY;
+      widget.isAlignLeft && (this.node.x = -rw + nw + widget.left);
+      widget.isAlignRight && (this.node.x = rw - nw - widget.right);
+      widget.isAlignBottom && (this.node.y = -rh + nh + widget.bottom);
+      widget.isAlignTop && (this.node.y = rh - nh - widget.top);
     }, 0);
   }
 }
