@@ -58,11 +58,19 @@ export default class CanvasAdapter extends cc.Component {
    *********************************************/
 
   onEnable() {
+    this.node.on(cc.Node.EventType.SIZE_CHANGED, this.align, this);
+    this.node.on(cc.Node.EventType.SCALE_CHANGED, this.align, this);
+    this.node.on(cc.Node.EventType.ROTATION_CHANGED, this.align, this);
+    this.node.on(cc.Node.EventType.ANCHOR_CHANGED, this.align, this);
     globalEvent.on(CANVAS_RESIZE_EVENT, this.adaptToCanvas, this);
     this.adaptToCanvas();
   }
 
   onDisable() {
+    this.node.off(cc.Node.EventType.SIZE_CHANGED, this.align, this);
+    this.node.off(cc.Node.EventType.SCALE_CHANGED, this.align, this);
+    this.node.off(cc.Node.EventType.ROTATION_CHANGED, this.align, this);
+    this.node.off(cc.Node.EventType.ANCHOR_CHANGED, this.align, this);
     globalEvent.off(CANVAS_RESIZE_EVENT, this.adaptToCanvas, this);
   }
 
@@ -91,20 +99,20 @@ export default class CanvasAdapter extends cc.Component {
    * 根据Canvas实际尺寸进行位置适配
    */
   private adaptToCanvasPos() {
-    if (!this.property_adapt_canvas_pos) {
-      return;
-    }
-
     //在下一帧对齐到Canvas尺寸
-    this.node.off(cc.Node.EventType.SIZE_CHANGED, this.align, this);
-    this.node.on(cc.Node.EventType.SIZE_CHANGED, this.align, this);
-    this.scheduleOnce(this.align, 0);
+    this.scheduleOnce(() => {
+      this.align();
+    }, 0);
   }
 
   /**
    * 执行对齐
    */
   align() {
+    if (!this.property_adapt_canvas_pos) {
+      return;
+    }
+
     //强制修改对齐模式为ONCE，告别使用父节点对齐
     let widget = this.node.getComponent(cc.Widget);
     if (!widget) {
