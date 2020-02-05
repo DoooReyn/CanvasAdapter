@@ -88,6 +88,16 @@ export default class CanvasAdapter extends cc.Component {
       return;
     }
 
+    //在下一帧对齐到Canvas尺寸
+    this.node.off(cc.Node.EventType.SIZE_CHANGED, this.align, this);
+    this.node.on(cc.Node.EventType.SIZE_CHANGED, this.align, this);
+    this.scheduleOnce(this.align, 0);
+  }
+
+  /**
+   * 执行对齐
+   */
+  align() {
     //强制修改对齐模式为ONCE，告别使用父节点对齐
     let widget = this.node.getComponent(cc.Widget);
     if (!widget) {
@@ -95,35 +105,35 @@ export default class CanvasAdapter extends cc.Component {
     }
     widget.alignMode = cc.Widget.AlignMode.ONCE;
 
-    //在下一帧对齐到Canvas尺寸
-    this.scheduleOnce(() => {
-      let { width, height, scaleX, scaleY, anchorX, anchorY } = this.node;
-      let real_size = getVisibleRealSize();
-      if (
-        widget.isAlignBottom &&
-        widget.isAlignLeft &&
-        widget.isAlignTop &&
-        widget.isAlignRight
-      ) {
-        let nw = real_size.width - widget.left - widget.right;
-        let nh = real_size.height - widget.top - widget.bottom;
-        this.node.setContentSize(nw, nh);
-      } else if (widget.isAlignBottom && widget.isAlignTop) {
-        let nh = real_size.height - widget.top - widget.bottom;
-        this.node.height = nh;
-      } else if (widget.isAlignLeft && widget.isAlignRight) {
-        let nw = real_size.width - widget.left - widget.right;
-        this.node.width = nw;
-      } else {
-      }
-      let rw = real_size.width * anchorX;
-      let nw = width * scaleX * anchorX;
-      let rh = real_size.height * anchorY;
-      let nh = height * scaleY * anchorY;
-      widget.isAlignLeft && (this.node.x = -rw + nw + widget.left);
-      widget.isAlignRight && (this.node.x = rw - nw - widget.right);
-      widget.isAlignBottom && (this.node.y = -rh + nh + widget.bottom);
-      widget.isAlignTop && (this.node.y = rh - nh - widget.top);
-    }, 0);
+    //执行对齐模式
+    let { width, height, scaleX, scaleY, anchorX, anchorY } = this.node;
+    let real_size = getVisibleRealSize();
+    if (
+      widget.isAlignBottom &&
+      widget.isAlignLeft &&
+      widget.isAlignTop &&
+      widget.isAlignRight
+    ) {
+      let nw = real_size.width - widget.left - widget.right;
+      let nh = real_size.height - widget.top - widget.bottom;
+      this.node.setContentSize(nw, nh);
+    } else if (widget.isAlignBottom && widget.isAlignTop) {
+      let nh = real_size.height - widget.top - widget.bottom;
+      this.node.height = nh;
+    } else if (widget.isAlignLeft && widget.isAlignRight) {
+      let nw = real_size.width - widget.left - widget.right;
+      this.node.width = nw;
+    } else {
+    }
+    let rw = real_size.width * 0.5;
+    let rh = real_size.height * 0.5;
+    let nw = width * scaleX * (1 - anchorX);
+    let nh = height * scaleY * (1 - anchorY);
+    widget.isAlignLeft && (this.node.x = -rw + nw + widget.left);
+    widget.isAlignRight && (this.node.x = rw - nw - widget.right);
+    widget.isAlignBottom && (this.node.y = -rh + nh + widget.bottom);
+    widget.isAlignTop && (this.node.y = rh - nh - widget.top);
   }
 }
+
+export { CanvasAdapter };
